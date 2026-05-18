@@ -67,7 +67,7 @@ Data is saved in the browser's `localStorage`. This means:
 Fork this repo, enable GitHub Pages under **Settings → Pages → Deploy from branch → main**, and your instance will be live at:
 
 ```
-[https://your-username.github.io/git-habit-tracker/](https://ramita13.github.io/git-habit-tracker/)
+https://your-username.github.io/git-habit-tracker/
 ```
 
 ---
