@@ -3,6 +3,8 @@
 A lightweight, single-file web app for building a consistent Git commit habit — with a daily checklist, commit logger, contribution grid, and a full command reference.
 
 
+**Live site:** [[Ramita13.github.io/git-habit-tracker](https://your-username.github.io/git-habit-tracker)](https://ramita13.github.io/git-habit-tracker/)
+
 ---
 
 ## what it does
@@ -65,7 +67,7 @@ Data is saved in the browser's `localStorage`. This means:
 Fork this repo, enable GitHub Pages under **Settings → Pages → Deploy from branch → main**, and your instance will be live at:
 
 ```
-https://your-username.github.io/git-habit-tracker/](https://ramita13.github.io/git-habit-tracker/
+[https://your-username.github.io/git-habit-tracker/](https://ramita13.github.io/git-habit-tracker/)
 ```
 
 ---
