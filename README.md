@@ -2,7 +2,6 @@
 
 A lightweight, single-file web app for building a consistent Git commit habit — with a daily checklist, commit logger, contribution grid, and a full command reference.
 
-Built as part of a personal system for tracking progress toward the [Global Talent Visa (Exceptional Promise)](https://technation.io/visa/) application.
 
 **Live site:** [your-username.github.io/git-habit-tracker](https://your-username.github.io/git-habit-tracker)
 
