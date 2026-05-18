@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>git habit tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f9f8;
+  --bg-raised: #ffffff;
+  --surface: #f3f2f0;
+  --surface2: #eceae7;
+  --border: rgba(0,0,0,0.1);
+  --border2: rgba(0,0,0,0.18);
+  --text: #1a1916;
+  --text-2: #6b6860;
+  --text-3: #a09e9a;
+  --accent: #1d9e75;
+  --accent-dim: #e1f5ee;
+  --accent-brd: #9fe1cb;
+  --amber: #92620a;
+  --amber-bg: #fef3da;
+  --amber-brd: #f5d07a;
+  --blue: #185fa5;
+  --blue-bg: #e6f1fb;
+  --blue-brd: #b5d4f4;
+  --red: #a32d2d;
+  --red-bg: #fcebeb;
+  --red-brd: #f7c1c1;
+  --purple: #534ab7;
+  --purple-bg: #eeedfe;
+  --purple-brd: #afa9ec;
+  --coral: #993c1d;
+  --coral-bg: #faece7;
+  --coral-brd: #f0997b;
+  --font: 'Geist', sans-serif;
+  --mono: 'Geist Mono', monospace;
+  --r: 8px;
+  --rl: 12px;
+  --rxl: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+/* NAV */
+nav { background: var(--bg-raised); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; height: 52px; position: sticky; top: 0; z-index: 100; }
+.brand { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); margin-right: 28px; display: flex; align-items: center; gap: 8px; }
+.brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.tab { height: 52px; display: flex; align-items: center; padding: 0 16px; font-size: 13px; color: var(--text-2); cursor: pointer; border: none; border-bottom: 2px solid transparent; background: none; font-family: var(--font); transition: all 0.15s; user-select: none; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--text); font-weight: 500; }
+.nav-r { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+
+/* LAYOUT */
+.page { display: none; padding: 32px; max-width: 820px; margin: 0 auto; }
+.page.active { display: block; }
+.ph { margin-bottom: 28px; }
+.ph-title { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+.ph-desc { font-size: 13px; color: var(--text-2); }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--rl); padding: 16px; }
+.stat-lbl { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; font-family: var(--mono); }
+.stat-val { font-size: 30px; font-weight: 300; color: var(--text); line-height: 1; }
+.stat-val.g { color: var(--accent); }
+.stat-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+/* CARD */
+.card { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--rxl); padding: 20px; margin-bottom: 14px; }
+.card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-ttl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); font-family: var(--mono); }
+
+/* HABITS */
+.h-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: opacity 0.12s; user-select: none; }
+.h-row:last-child { border-bottom: none; padding-bottom: 0; }
+.h-row:first-child { padding-top: 0; }
+.h-row:hover { opacity: 0.72; }
+.chk { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--border2); background: var(--bg-raised); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; transition: all 0.15s; color: var(--accent); }
+.chk.done { background: var(--accent-dim); border-color: var(--accent-brd); }
+.h-lbl { flex: 1; font-size: 13px; color: var(--text); transition: color 0.15s; }
+.h-lbl.done { color: var(--text-3); text-decoration: line-through; }
+.tag { font-size: 11px; padding: 2px 9px; border-radius: 20px; flex-shrink: 0; font-family: var(--mono); }
+.ts { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-brd); }
+.tt { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-brd); }
+.te { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-brd); }
+.prog-bar { height: 2px; background: var(--surface); border-radius: 2px; margin-top: 14px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+
+/* INPUT */
+.inp-row { display: flex; gap: 8px; }
+.inp-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 9px 14px; font-family: var(--mono); font-size: 13px; color: var(--text); outline: none; transition: border-color 0.15s; }
+.inp-row input:focus { border-color: var(--border2); }
+.inp-row input::placeholder { color: var(--text-3); }
+.btn-p { background: var(--text); color: var(--bg-raised); border: none; border-radius: var(--r); padding: 9px 18px; font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+.btn-p:hover { opacity: 0.82; }
+.btn-p:active { transform: scale(0.98); }
+.btn-g { background: transparent; border: 1px solid var(--border); border-radius: var(--r); padding: 6px 12px; font-family: var(--font); font-size: 12px; color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+.btn-g:hover { background: var(--surface); color: var(--text); }
+.msg { margin-top: 10px; padding: 10px 14px; background: var(--surface); border-radius: var(--r); font-size: 12px; color: var(--text-2); min-height: 38px; display: flex; align-items: center; font-family: var(--mono); }
+.msg.ok { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-brd); }
+
+/* GRID */
+.grid-outer { display: flex; gap: 4px; }
+.day-lbls { display: flex; flex-direction: column; gap: 3px; padding-top: 1px; margin-right: 2px; }
+.dlbl { height: 13px; font-size: 9px; color: var(--text-3); line-height: 13px; font-family: var(--mono); min-width: 10px; }
+.gcols { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 4px; }
+.gcol { display: flex; flex-direction: column; gap: 3px; }
+.cell { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; }
+.c0 { background: var(--surface); border: 1px solid var(--border); }
+.c1 { background: #9fe1cb; }
+.c2 { background: #1d9e75; }
+.c3 { background: #085041; }
+.cf { background: transparent; }
+.legend { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+.ldot { width: 11px; height: 11px; border-radius: 2px; }
+.gftr { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+
+/* LOG */
+.log-row { display: flex; align-items: baseline; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.log-row:last-child { border-bottom: none; padding-bottom: 0; }
+.log-row:first-child { padding-top: 0; }
+.log-t { font-size: 11px; color: var(--text-3); flex-shrink: 0; font-family: var(--mono); }
+.log-m { font-size: 12px; color: var(--text); font-family: var(--mono); word-break: break-all; }
+.pf { color: var(--blue); } .pr { color: var(--red); } .pw { color: var(--amber); }
+.pref { color: var(--accent); } .pc { color: var(--text-3); } .pd { color: var(--purple); }
+
+/* SYSTEM */
+.sp { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--rxl); padding: 20px; margin-bottom: 14px; }
+.sp-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.pico { width: 30px; height: 30px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.pico.s  { background: var(--blue-bg);   color: var(--blue); }
+.pico.b  { background: var(--purple-bg); color: var(--purple); }
+.pico.ip { background: var(--amber-bg);  color: var(--amber); }
+.pico.p  { background: var(--accent-dim);color: var(--accent); }
+.pico.m  { background: var(--accent-dim);color: var(--accent); }
+.pico.r  { background: var(--coral-bg);  color: var(--coral); }
+.pname { font-weight: 500; font-size: 14px; }
+.psub  { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+.cmd-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.cmd-row:last-child { border-bottom: none; padding-bottom: 0; }
+.cmd-row:first-child { padding-top: 0; }
+.cmd-code { flex: 1; background: var(--surface); border-radius: var(--r); padding: 7px 12px; font-family: var(--mono); font-size: 12px; color: var(--text); word-break: break-all; }
+.cmd-note { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+.cpbtn { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 7px 10px; font-size: 11px; color: var(--text-2); cursor: pointer; font-family: var(--mono); transition: all 0.15s; white-space: nowrap; }
+.cpbtn:hover { background: var(--surface2); }
+.cpbtn.copied { color: var(--accent); border-color: var(--accent-brd); background: var(--accent-dim); }
+.pfx-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-family: var(--mono); }
+.notebox { border-radius: var(--r); padding: 10px 14px; font-size: 12px; font-family: var(--mono); line-height: 1.5; margin-top: 10px; }
+.nb-warn   { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-brd); }
+.nb-info   { background: var(--blue-bg);  color: var(--blue);  border: 1px solid var(--blue-brd); }
+.nb-danger { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-brd); }
+
+/* COMMANDS PAGE */
+.sec-wrap { background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--rxl); margin-bottom: 12px; overflow: hidden; }
+.sec-hdr { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.12s; }
+.sec-hdr:hover { background: var(--surface); }
+.sec-ico { width: 32px; height: 32px; border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.sec-title { font-weight: 500; font-size: 14px; flex: 1; }
+.sec-count { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+.chev { font-size: 12px; color: var(--text-3); transition: transform 0.2s; }
+.sec-body { padding: 4px 20px 16px; display: none; }
+.sec-body.open { display: block; }
+.cmd-tbl { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.cmd-tbl tr { border-bottom: 1px solid var(--border); }
+.cmd-tbl tr:last-child { border-bottom: none; }
+.cmd-tbl td { padding: 9px 6px; vertical-align: top; font-size: 12px; }
+.cmd-tbl .tc { font-family: var(--mono); color: var(--text); width: 52%; padding-right: 14px; line-height: 1.5; }
+.cmd-tbl .tn { color: var(--text-2); font-size: 12px; line-height: 1.5; }
+.cmd-tbl .tv { width: 52px; text-align: right; }
+.tbcpbtn { font-size: 10px; padding: 3px 7px; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--text-3); cursor: pointer; font-family: var(--mono); transition: all 0.12s; white-space: nowrap; }
+.tbcpbtn:hover { background: var(--surface2); color: var(--text); }
+.tbcpbtn.done { color: var(--accent); border-color: var(--accent-brd); background: var(--accent-dim); }
+
+footer { max-width: 820px; margin: 0 auto; padding: 20px 32px 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); }
+footer span { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand"><span class="brand-dot"></span>git habit tracker</div>
+  <button class="tab active" onclick="showPage('tracker',this)">tracker</button>
+  <button class="tab" onclick="showPage('system',this)">daily system</button>
+  <button class="tab" onclick="showPage('commands',this)">commands</button>
+  <div class="nav-r"><div id="clock"></div></div>
+</nav>
+
+<!-- TRACKER -->
+<div class="page active" id="page-tracker">
+  <div class="ph">
+    <div class="ph-title" id="date-hdr">Monday, 18 May</div>
+    <div class="ph-desc">tick habits as you go. log every commit. build the streak.</div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-lbl">streak</div><div class="stat-val g" id="ss">0</div><div class="stat-sub">days</div></div>
+    <div class="stat"><div class="stat-lbl">today</div><div class="stat-val" id="st">0</div><div class="stat-sub">commits</div></div>
+    <div class="stat"><div class="stat-lbl">this week</div><div class="stat-val" id="sw">0</div><div class="stat-sub">commits</div></div>
+    <div class="stat"><div class="stat-lbl">habits</div><div class="stat-val" id="sh">0/5</div><div class="stat-sub">done today</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-ttl">daily habits</span><span style="font-size:11px;color:var(--accent);font-family:var(--mono);" id="hdone"></span></div>
+    <div id="hlist"></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-ttl">log a commit</span>
+      <span style="font-size:10px;color:var(--text-3);font-family:var(--mono);">feat: &nbsp; fix: &nbsp; WIP: &nbsp; refactor: &nbsp; chore: &nbsp; docs:</span>
+    </div>
+    <div class="inp-row">
+      <input type="text" id="cinput" placeholder="feat: what did you just build?" autocomplete="off" spellcheck="false">
+      <button class="btn-p" onclick="logCommit()">log it</button>
+    </div>
+    <div class="msg" id="msgbox">type your commit message and press enter</div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-ttl">contribution grid — 14 weeks</span>
+      <div class="legend">
+        <span>less</span>
+        <div class="ldot c0"></div><div class="ldot c1"></div><div class="ldot c2"></div><div class="ldot c3"></div>
+        <span>more</span>
+      </div>
+    </div>
+    <div class="grid-outer"><div class="day-lbls" id="dlbls"></div><div class="gcols" id="grid"></div></div>
+    <div class="gftr"><span id="gstart"></span><span>today</span></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr"><span class="card-ttl">today's commits</span><button class="btn-g" onclick="clearToday()">clear today</button></div>
+    <div id="loglist"><div style="font-size:12px;color:var(--text-3);font-family:var(--mono);">no commits yet — log your first one above</div></div>
+  </div>
+</div>
+
+<!-- SYSTEM -->
+<div class="page" id="page-system">
+  <div class="ph"><div class="ph-title">daily system</div><div class="ph-desc">the lightweight workflow — every command for every moment of your day.</div></div>
+
+  <div class="sp">
+    <div class="sp-hdr"><div class="pico s">☀</div><div><div class="pname">start of day</div><div class="psub">always run these before touching any code</div></div></div>
+    <div id="cs"></div>
+  </div>
+  <div class="sp">
+    <div class="sp-hdr"><div class="pico b">⎇</div><div><div class="pname">create or switch branch</div><div class="psub">new task = new branch, always</div></div></div>
+    <div id="cb"></div>
+    <div class="notebox nb-warn" style="margin-top:12px;">naming: <b>feature/</b> for new things &nbsp;·&nbsp; <b>fix/</b> for bugs &nbsp;·&nbsp; <b>chore/</b> for cleanup &nbsp;·&nbsp; <b>docs/</b> for documentation</div>
+  </div>
+  <div class="sp">
+    <div class="sp-hdr"><div class="pico ip">✏</div><div><div class="pname">in progress — commit often</div><div class="psub">at every trigger: coffee, Slack, lunch, end of day</div></div></div>
+    <div id="ci"></div>
+    <div class="pfx-pills">
+      <span class="pill" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-brd);">feat:</span>
+      <span class="pill" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-brd);">fix:</span>
+      <span class="pill" style="background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-brd);">WIP:</span>
+      <span class="pill" style="background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-brd);">refactor:</span>
+      <span class="pill" style="background:var(--surface);color:var(--text-2);border:1px solid var(--border);">chore:</span>
+      <span class="pill" style="background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-brd);">docs:</span>
+    </div>
+  </div>
+  <div class="sp">
+    <div class="sp-hdr"><div class="pico p">↑</div><div><div class="pname">push to remote</div><div class="psub">at minimum once per day</div></div></div>
+    <div id="cp"></div>
+  </div>
+  <div class="sp">
+    <div class="sp-hdr"><div class="pico m">⑂</div><div><div class="pname">merge back to main</div><div class="psub">when a feature is fully complete</div></div></div>
+    <div id="cm"></div>
+  </div>
+  <div class="sp">
+    <div class="sp-hdr"><div class="pico r">⚠</div><div><div class="pname">rescue commands</div><div class="psub">when things go sideways</div></div></div>
+    <div id="cr"></div>
+  </div>
+</div>
+
+<!-- COMMANDS -->
+<div class="page" id="page-commands">
+  <div class="ph"><div class="ph-title">git command reference</div><div class="ph-desc">every command you'll need — from basics to advanced. click a section to expand.</div></div>
+  <div id="cmdsections"></div>
+</div>
+
+<footer>
+  <span>git habit tracker — all data stored locally in your browser</span>
+  <button class="btn-g" onclick="resetAll()" style="font-size:11px;">reset all data</button>
+</footer>
+
+<script>
+const HABITS = [
+  { id:'h1', text:'pulled latest before starting work', tag:'start', tc:'ts' },
+  { id:'h2', text:'committed before making tea or coffee', tag:'trigger', tc:'tt' },
+  { id:'h3', text:'committed before opening Slack or messages', tag:'trigger', tc:'tt' },
+  { id:'h4', text:'committed before lunch', tag:'trigger', tc:'tt' },
+  { id:'h5', text:'end-of-day push done (WIP: is absolutely fine)', tag:'end', tc:'te' },
+];
+
+const MSGS = [
+  'start your day — pull first, then build',
+  'one down. keep going.',
+  'halfway through. momentum is building.',
+  'three done. two to go.',
+  'almost a full day. finish strong.',
+  'all habits done. that\'s the standard.',
+];
+
+const SYS = {
+  s: [
+    { c:'git status', n:'see what state you left things in — run this always' },
+    { c:'git pull origin main', n:'pull latest before touching anything' },
+    { c:'git branch', n:'confirm which branch you\'re on (starred = current)' },
+    { c:'git log --oneline -5', n:'see the last 5 commits for context' },
+  ],
+  b: [
+    { c:'git checkout -b feature/your-feature-name', n:'create new branch AND switch to it in one command' },
+    { c:'git checkout existing-branch-name', n:'switch to an existing branch (no -b flag)' },
+    { c:'git branch', n:'list all local branches' },
+    { c:'git branch -a', n:'list all branches including remote' },
+  ],
+  i: [
+    { c:'git status', n:'always check before staging — know exactly what changed' },
+    { c:'git diff', n:'see exact line-by-line changes before committing' },
+    { c:'git add .', n:'stage all changed files (check status first)' },
+    { c:'git add path/to/specific_file.py', n:'stage only one specific file' },
+    { c:'git add -p', n:'interactively choose which chunks to stage — most precise' },
+    { c:'git commit -m "feat: add stability gate fail_count tracking"', n:'commit with a specific descriptive message' },
+    { c:'git commit -m "WIP: mid-way through refactoring capture logic"', n:'end-of-day save — broken code is fine, label it WIP:' },
+  ],
+  p: [
+    { c:'git push -u origin feature/your-feature-name', n:'first push of a new branch — sets upstream tracking' },
+    { c:'git push', n:'after upstream is set — shortest daily form' },
+    { c:'git push origin feature/your-feature-name', n:'explicit push specifying branch name' },
+  ],
+  m: [
+    { c:'git checkout main', n:'switch back to main first' },
+    { c:'git pull origin main', n:'pull latest main before merging' },
+    { c:'git merge feature/your-feature-name', n:'merge your branch into main' },
+    { c:'git push origin main', n:'push the merged main to remote' },
+    { c:'git branch -d feature/your-feature-name', n:'delete local branch after merging (optional cleanup)' },
+  ],
+  r: [
+    { c:'git log --oneline -10', n:'see last 10 commits — good for orientation' },
+    { c:'git diff HEAD', n:'see all uncommitted changes vs last commit' },
+    { c:'git stash', n:'shelve changes without committing (e.g. urgent branch switch)' },
+    { c:'git stash pop', n:'bring stashed changes back' },
+    { c:'git stash list', n:'see all stashed changesets' },
+    { c:'git reflog', n:'history of all HEAD movements — the ultimate recovery tool' },
+    { c:'git checkout -- file.py', n:'discard changes to one file (⚠ irreversible)' },
+  ],
+};
+
+const SECTIONS = [
+  { icon:'📁', title:'setup & init', color:['var(--blue-bg)','var(--blue)'], cmds:[
+    { c:'git init', n:'initialise a new local repo in current folder' },
+    { c:'git init my-project', n:'create a folder and initialise a repo inside it' },
+    { c:'git clone https://github.com/user/repo.git', n:'clone a remote repo to your machine' },
+    { c:'git clone https://... my-folder', n:'clone into a specific folder name' },
+    { c:'git config --global user.name "Your Name"', n:'set your name globally for all repos' },
+    { c:'git config --global user.email "you@email.com"', n:'set your email globally' },
+    { c:'git config --list', n:'see all current config values' },
+    { c:'git remote add origin https://github.com/user/repo.git', n:'link local repo to a remote' },
+    { c:'git remote -v', n:'show all remotes and their URLs' },
+    { c:'git remote remove origin', n:'remove a remote connection' },
+  ]},
+  { icon:'🔎', title:'status & inspection', color:['var(--purple-bg)','var(--purple)'], cmds:[
+    { c:'git status', n:'show working tree status — your most-used command' },
+    { c:'git log', n:'full commit history with messages and metadata' },
+    { c:'git log --oneline', n:'compact one-line view per commit' },
+    { c:'git log --oneline --graph --all', n:'visual branch tree in the terminal' },
+    { c:'git log --author="Rami"', n:'filter commits by author name' },
+    { c:'git log --since="2 weeks ago"', n:'commits within a time window' },
+    { c:'git show <commit-hash>', n:'full details of a specific commit' },
+    { c:'git diff', n:'unstaged changes vs last commit' },
+    { c:'git diff --staged', n:'staged changes ready to be committed' },
+    { c:'git diff main feature/x', n:'compare two branches' },
+    { c:'git diff HEAD~1 HEAD', n:'diff between last two commits' },
+    { c:'git blame file.py', n:'see who wrote each line and when' },
+    { c:'git shortlog -sn', n:'commit counts per author' },
+  ]},
+  { icon:'📋', title:'staging & committing', color:['var(--amber-bg)','var(--amber)'], cmds:[
+    { c:'git add .', n:'stage all changes in current directory' },
+    { c:'git add file.py', n:'stage a specific file' },
+    { c:'git add src/', n:'stage an entire folder' },
+    { c:'git add -p', n:'interactively choose chunks to stage — most precise method' },
+    { c:'git reset HEAD file.py', n:'unstage a file (keep the changes)' },
+    { c:'git commit -m "message"', n:'commit with inline message — always use double quotes on Windows CMD' },
+    { c:'git commit --amend -m "new message"', n:'reword the last commit message (before pushing)' },
+    { c:'git commit --amend --no-edit', n:'add staged changes into the last commit without rewording' },
+    { c:'git commit -am "message"', n:'stage all tracked files and commit in one step' },
+  ]},
+  { icon:'⎇', title:'branching', color:['var(--accent-dim)','var(--accent)'], cmds:[
+    { c:'git branch', n:'list local branches (starred = current)' },
+    { c:'git branch -a', n:'list all branches including remote-tracking' },
+    { c:'git branch feature/name', n:'create a new branch without switching' },
+    { c:'git checkout -b feature/name', n:'create AND switch to new branch — most common' },
+    { c:'git checkout main', n:'switch to an existing branch' },
+    { c:'git switch feature/name', n:'modern alternative to checkout for switching' },
+    { c:'git branch -d feature/name', n:'delete a fully merged branch' },
+    { c:'git branch -D feature/name', n:'⚠ force-delete a branch even if unmerged' },
+    { c:'git branch -m old-name new-name', n:'rename a local branch' },
+    { c:'git checkout -b feature/x origin/feature/x', n:'check out a remote branch locally' },
+  ]},
+  { icon:'⑂', title:'merging & rebasing', color:['var(--accent-dim)','var(--accent)'], cmds:[
+    { c:'git merge feature/name', n:'merge branch into current branch' },
+    { c:'git merge --no-ff feature/name', n:'merge with a merge commit (preserves branch history)' },
+    { c:'git merge --squash feature/name', n:'squash all commits into one before merging' },
+    { c:'git merge --abort', n:'abort a merge that is in conflict state' },
+    { c:'git rebase main', n:'rebase current branch onto main (cleaner history)' },
+    { c:'git rebase -i HEAD~3', n:'interactive rebase — squash, reorder, edit last 3 commits' },
+    { c:'git rebase --abort', n:'abort a rebase in progress' },
+    { c:'git rebase --continue', n:'continue rebase after resolving a conflict' },
+    { c:'git cherry-pick <hash>', n:'apply a specific commit from another branch' },
+  ], note:'info:Prefer merge for shared/main branches. Use rebase only on your own local branches — it rewrites history.' },
+  { icon:'↑', title:'remote & syncing', color:['var(--blue-bg)','var(--blue)'], cmds:[
+    { c:'git fetch', n:'download remote changes without merging' },
+    { c:'git fetch origin', n:'fetch from origin specifically' },
+    { c:'git pull', n:'fetch + merge remote into current branch' },
+    { c:'git pull --rebase', n:'fetch + rebase instead of merge (cleaner history)' },
+    { c:'git push', n:'push current branch to tracked remote' },
+    { c:'git push -u origin feature/name', n:'first push of a branch — sets upstream tracking' },
+    { c:'git push --force-with-lease', n:'safe force push — fails if remote changed since your last fetch' },
+    { c:'git push origin --delete feature/name', n:'delete a remote branch' },
+    { c:'git ls-remote origin', n:'list all remote refs and their hashes' },
+  ]},
+  { icon:'🏷', title:'tags', color:['var(--coral-bg)','var(--coral)'], cmds:[
+    { c:'git tag', n:'list all local tags' },
+    { c:'git tag v1.0.0', n:'create a lightweight tag at current commit' },
+    { c:'git tag -a v1.0.0 -m "Release 1.0.0"', n:'create an annotated tag with a message' },
+    { c:'git push origin v1.0.0', n:'push a specific tag to remote' },
+    { c:'git push origin --tags', n:'push all local tags to remote' },
+    { c:'git tag -d v1.0.0', n:'delete a local tag' },
+    { c:'git push origin --delete v1.0.0', n:'delete a tag from remote' },
+    { c:'git checkout v1.0.0', n:'check out a tag (enters detached HEAD state)' },
+  ]},
+  { icon:'📦', title:'stashing', color:['var(--amber-bg)','var(--amber)'], cmds:[
+    { c:'git stash', n:'shelve all uncommitted changes temporarily' },
+    { c:'git stash push -m "my stash name"', n:'stash with a descriptive name' },
+    { c:'git stash pop', n:'apply latest stash and remove it from the list' },
+    { c:'git stash apply stash@{0}', n:'apply a stash without removing it from the list' },
+    { c:'git stash list', n:'list all stashed changesets' },
+    { c:'git stash drop stash@{0}', n:'delete a specific stash' },
+    { c:'git stash clear', n:'delete all stashes' },
+    { c:'git stash show -p stash@{0}', n:'see the full diff inside a stash' },
+    { c:'git stash branch feature/from-stash', n:'create a new branch from a stash' },
+  ]},
+  { icon:'↩', title:'undoing & resetting', color:['var(--red-bg)','var(--red)'], cmds:[
+    { c:'git restore file.py', n:'discard changes in a file (modern, replaces checkout --)' },
+    { c:'git checkout -- file.py', n:'⚠ discard changes in a file (irreversible — older syntax)' },
+    { c:'git reset HEAD file.py', n:'unstage a file, keep the changes in working tree' },
+    { c:'git reset --soft HEAD~1', n:'undo last commit, keep changes staged ready to recommit' },
+    { c:'git reset --mixed HEAD~1', n:'undo last commit, keep changes but unstaged' },
+    { c:'git reset --hard HEAD~1', n:'⚠ undo last commit AND permanently discard all its changes' },
+    { c:'git revert <hash>', n:'create a new commit that safely undoes a previous one' },
+    { c:'git clean -fd', n:'⚠ permanently delete all untracked files and directories' },
+    { c:'git reflog', n:'full history of HEAD movements — ultimate recovery lifeline' },
+  ], note:'danger:⚠ Commands marked with ⚠ permanently destroy work. Always run git status and git diff first. git reflog is your safety net — it keeps 90 days of history.' },
+  { icon:'🔍', title:'searching', color:['var(--purple-bg)','var(--purple)'], cmds:[
+    { c:'git grep "search term"', n:'search for a string across all tracked files' },
+    { c:'git grep -n "search term"', n:'search with line numbers shown' },
+    { c:'git log -S "function_name"', n:'find commits that added or removed a specific string (pickaxe)' },
+    { c:'git log --all --grep="bug fix"', n:'search commit messages across all branches' },
+    { c:'git log --follow -- path/to/file.py', n:'show history of a file including renames' },
+    { c:'git bisect start', n:'begin binary search to find which commit introduced a bug' },
+    { c:'git bisect good <hash>', n:'mark a known-good commit during bisect' },
+    { c:'git bisect bad', n:'mark the current commit as bad during bisect' },
+    { c:'git bisect reset', n:'end the bisect session and return to HEAD' },
+  ]},
+  { icon:'⚙', title:'advanced & utilities', color:['var(--surface)','var(--text-2)'], cmds:[
+    { c:'git worktree add ../branch-dir feature/name', n:'check out a branch in a separate folder simultaneously' },
+    { c:'git submodule add https://repo.git', n:'add a submodule (a repo nested inside your repo)' },
+    { c:'git submodule update --init --recursive', n:'initialise all submodules after cloning' },
+    { c:'git archive --format=zip HEAD > project.zip', n:'export repo snapshot as zip without .git folder' },
+    { c:'git gc', n:'run garbage collection and optimise local repo storage' },
+    { c:'git count-objects -vH', n:'show repo disk usage in human-readable form' },
+    { c:'git format-patch HEAD~3', n:'create patch files for the last 3 commits' },
+    { c:'git apply my.patch', n:'apply a patch file to the working tree' },
+    { c:'git rm --cached file.py', n:'stop tracking a file without deleting it (useful with .gitignore)' },
+    { c:'.gitignore: *.pyc  __pycache__/  .env  *.log', n:'common patterns to add to your .gitignore file' },
+  ]},
+];
+
+// ─── STORAGE
+function todayKey() { return new Date().toISOString().split('T')[0]; }
+function load() { try { return JSON.parse(localStorage.getItem('ghtrk4')||'{}'); } catch { return {}; } }
+function save(d) { try { localStorage.setItem('ghtrk4', JSON.stringify(d)); } catch {} }
+function getState() {
+  const d = load(), today = todayKey();
+  if (!d.days) d.days = {};
+  if (!d.days[today]) d.days[today] = { commits:[], habits:{} };
+  if (!d.streak) d.streak = 0;
+  if (!d.lastActive) d.lastActive = '';
+  return d;
+}
+function updateStreak(d) {
+  const today = todayKey();
+  if (d.lastActive === today) return;
+  const yest = new Date(); yest.setDate(yest.getDate()-1);
+  const yKey = yest.toISOString().split('T')[0];
+  d.streak = d.lastActive === yKey ? (d.streak||0)+1 : 1;
+  d.lastActive = today;
+}
+function countDone(d) {
+  const today = todayKey();
+  return Object.values((d.days[today]||{}).habits||{}).filter(Boolean).length;
+}
+
+// ─── TRACKER
+function toggleHabit(id) {
+  const d = getState(), today = todayKey();
+  d.days[today].habits[id] = !d.days[today].habits[id];
+  if (Object.values(d.days[today].habits).some(Boolean)) updateStreak(d);
+  save(d); renderTracker();
+}
+function logCommit() {
+  const inp = document.getElementById('cinput'), msg = inp.value.trim();
+  if (!msg) { flash('type a commit message first', false); return; }
+  const d = getState(), today = todayKey();
+  const time = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  d.days[today].commits.unshift({ msg, time });
+  updateStreak(d); save(d); inp.value = '';
+  flash('logged: '+msg, true); renderTracker();
+}
+function flash(msg, ok) {
+  const b = document.getElementById('msgbox');
+  b.textContent = msg; b.className = 'msg'+(ok?' ok':'');
+  if (ok) setTimeout(()=>{ b.textContent = MSGS[countDone(getState())]; b.className='msg'; }, 2400);
+}
+function clearToday() {
+  if (!confirm('Clear today\'s commits?')) return;
+  const d = getState(); d.days[todayKey()].commits = []; save(d); renderTracker();
+}
+function resetAll() {
+  if (!confirm('Reset ALL tracking data? Cannot be undone.')) return;
+  localStorage.removeItem('ghtrk4'); renderTracker();
+}
+
+const PFX = { feat:'pf', fix:'pr', wip:'pw', refactor:'pref', chore:'pc', docs:'pd' };
+
+function renderTracker() {
+  const d = getState(), today = todayKey();
+  const td = d.days[today]||{commits:[],habits:{}};
+  let wc = 0;
+  for (let i=0;i<7;i++){const dt=new Date();dt.setDate(dt.getDate()-i);const k=dt.toISOString().split('T')[0];if(d.days[k])wc+=d.days[k].commits.length;}
+  const done = countDone(d);
+  document.getElementById('ss').textContent = d.streak||0;
+  document.getElementById('st').textContent = td.commits.length;
+  document.getElementById('sw').textContent = wc;
+  document.getElementById('sh').textContent = done+'/5';
+  document.getElementById('prog').style.width = Math.round((done/5)*100)+'%';
+  document.getElementById('hdone').textContent = done===5 ? 'all done ✓' : '';
+  const mb = document.getElementById('msgbox');
+  if (!mb.classList.contains('ok')) mb.textContent = MSGS[Math.min(done,MSGS.length-1)];
+
+  // habits
+  const hl = document.getElementById('hlist'); hl.innerHTML = '';
+  HABITS.forEach(h=>{
+    const done = !!(td.habits[h.id]);
+    const row = document.createElement('div'); row.className='h-row'; row.onclick=()=>toggleHabit(h.id);
+    const chk = document.createElement('div'); chk.className='chk'+(done?' done':''); chk.textContent=done?'✓':'';
+    const lbl = document.createElement('span'); lbl.className='h-lbl'+(done?' done':''); lbl.textContent=h.text;
+    const tag = document.createElement('span'); tag.className='tag '+h.tc; tag.textContent=h.tag;
+    row.append(chk,lbl,tag); hl.appendChild(row);
+  });
+
+  // grid
+  const WEEKS=14, now=new Date();
+  const start=new Date(now); start.setDate(now.getDate()-(WEEKS*7-1));
+  document.getElementById('gstart').textContent = start.toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
+  const dl=document.getElementById('dlbls'); dl.innerHTML='';
+  ['S','M','T','W','T','F','S'].forEach((l,i)=>{const e=document.createElement('div');e.className='dlbl';e.textContent=i%2!==0?l:'';dl.appendChild(e);});
+  const g=document.getElementById('grid'); g.innerHTML='';
+  for(let w=0;w<WEEKS;w++){
+    const col=document.createElement('div'); col.className='gcol';
+    for(let day=0;day<7;day++){
+      const dt=new Date(start); dt.setDate(start.getDate()+w*7+day);
+      const k=dt.toISOString().split('T')[0], fut=dt>now;
+      const cnt=(d.days[k]||{}).commits?(d.days[k].commits.length):0;
+      const cell=document.createElement('div');
+      cell.className='cell '+(fut?'cf':cnt===0?'c0':cnt<=2?'c1':cnt<=4?'c2':'c3');
+      if(!fut) cell.title=k+': '+cnt+' commit'+(cnt!==1?'s':'');
+      col.appendChild(cell);
+    }
+    g.appendChild(col);
+  }
+
+  // log
+  const ll=document.getElementById('loglist'); ll.innerHTML='';
+  if(!td.commits.length){ll.innerHTML='<div style="font-size:12px;color:var(--text-3);font-family:var(--mono);">no commits yet — log your first one above</div>';return;}
+  td.commits.slice(0,10).forEach(c=>{
+    const row=document.createElement('div'); row.className='log-row';
+    const t=document.createElement('span'); t.className='log-t'; t.textContent=c.time;
+    const m=document.createElement('span'); m.className='log-m';
+    const pfx=c.msg.split(':')[0].toLowerCase().trim(), cls=PFX[pfx]||'';
+    if(cls&&c.msg.includes(':')){const p=c.msg.split(':');m.innerHTML='<span class="'+cls+'">'+p[0]+':</span>'+p.slice(1).join(':');}
+    else m.textContent=c.msg;
+    row.append(t,m); ll.appendChild(row);
+  });
+}
+
+// ─── SYSTEM CMDS
+function buildSys(id, cmds) {
+  const el=document.getElementById(id); if(!el)return;
+  cmds.forEach(c=>{
+    const row=document.createElement('div'); row.className='cmd-row';
+    const left=document.createElement('div'); left.style.flex='1';
+    const code=document.createElement('div'); code.className='cmd-code'; code.textContent=c.c;
+    const note=document.createElement('div'); note.className='cmd-note'; note.textContent=c.n;
+    left.append(code,note);
+    const btn=document.createElement('button'); btn.className='cpbtn'; btn.textContent='copy';
+    btn.onclick=()=>copyTxt(c.c,btn);
+    row.append(left,btn); el.appendChild(row);
+  });
+}
+
+// ─── COMMANDS PAGE
+function buildSections() {
+  const container=document.getElementById('cmdsections');
+  SECTIONS.forEach((sec,si)=>{
+    const wrap=document.createElement('div'); wrap.className='sec-wrap';
+    const hdr=document.createElement('div'); hdr.className='sec-hdr';
+    hdr.onclick=()=>{
+      const body=wrap.querySelector('.sec-body'), chev=hdr.querySelector('.chev');
+      const open=body.classList.toggle('open');
+      chev.style.transform=open?'rotate(90deg)':'';
+    };
+    const ico=document.createElement('div'); ico.className='sec-ico';
+    ico.style.background=sec.color[0]; ico.style.color=sec.color[1]; ico.textContent=sec.icon;
+    const ttl=document.createElement('div'); ttl.className='sec-title'; ttl.textContent=sec.title;
+    const cnt=document.createElement('div'); cnt.className='sec-count'; cnt.textContent=sec.cmds.length+' commands';
+    const chev=document.createElement('div'); chev.className='chev'; chev.textContent='›';
+    hdr.append(ico,ttl,cnt,chev); wrap.appendChild(hdr);
+
+    const body=document.createElement('div'); body.className='sec-body';
+
+    if(sec.note){
+      const [type,msg]=sec.note.split(':'); const nb=document.createElement('div');
+      nb.className='notebox nb-'+type; nb.textContent=msg; body.appendChild(nb);
+    }
+
+    const tbl=document.createElement('table'); tbl.className='cmd-tbl';
+    sec.cmds.forEach(c=>{
+      const tr=document.createElement('tr');
+      const tc=document.createElement('td'); tc.className='tc'; tc.textContent=c.c;
+      const tn=document.createElement('td'); tn.className='tn'; tn.textContent=c.n;
+      const tv=document.createElement('td'); tv.className='tv';
+      const btn=document.createElement('button'); btn.className='tbcpbtn'; btn.textContent='copy';
+      btn.onclick=(e)=>{e.stopPropagation();copyTxt(c.c,btn);};
+      tv.appendChild(btn); tr.append(tc,tn,tv); tbl.appendChild(tr);
+    });
+    body.appendChild(tbl);
+    if(si===0) body.classList.add('open');
+    wrap.appendChild(body); container.appendChild(wrap);
+  });
+}
+
+function copyTxt(text, btn) {
+  const orig=btn.textContent;
+  navigator.clipboard.writeText(text).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  }).finally(()=>{});
+  navigator.clipboard.writeText(text).then(()=>{}).catch(()=>{});
+  btn.textContent='copied'; btn.classList.add('copied','done');
+  setTimeout(()=>{btn.textContent=orig;btn.classList.remove('copied','done');},1800);
+}
+
+// ─── NAV
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── CLOCK
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('date-hdr').textContent=n.toLocaleDateString([],{weekday:'long',day:'numeric',month:'long'});
+}
+
+document.getElementById('cinput').addEventListener('keydown',e=>{if(e.key==='Enter')logCommit();});
+
+buildSys('cs',SYS.s); buildSys('cb',SYS.b); buildSys('ci',SYS.i);
+buildSys('cp',SYS.p); buildSys('cm',SYS.m); buildSys('cr',SYS.r);
+buildSections(); renderTracker(); tick(); setInterval(tick,1000);
+</script>
+</body>
+</html>
