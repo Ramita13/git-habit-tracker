@@ -3,7 +3,7 @@
 A lightweight, single-file web app for building a consistent Git commit habit — with a daily checklist, commit logger, contribution grid, and a full command reference.
 
 
-**Live site:** [your-username.github.io/git-habit-tracker](https://your-username.github.io/git-habit-tracker)
+**Live site:** [Ramita13.github.io/git-habit-tracker](https://your-username.github.io/git-habit-tracker)
 
 ---
 
